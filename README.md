@@ -13,6 +13,15 @@ _The Components in Italic Style only needed for wiring_
 ### Wiring
 | ESP32 | Component |
 | ----- | ----- |
-| PLACEHOLDER | PLACEHOLDER |
+| VIN | VCC (LCD-Display) |
+| D21 | SDA (LCD-Display) |
+| D22 | SCL (LCD-Display) |
+| D13 | Menu Button |
+| D12 | OK Button |
+| D14 | Right Button |
+| D27 | Left Button |
+| D26 | Up Button |
+| D25 | Down Button |
+
 ### Code
 Import the sketch.ino file in the Arudino IDE and upload it to the esp32

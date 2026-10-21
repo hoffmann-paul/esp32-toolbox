@@ -3,19 +3,23 @@
 #include <WiFi.h>                  
 #include <TimeLib.h>      
 #include <string.h>
+#define BUTTON_PIN GPIO_NUM_13
 
 LiquidCrystal_I2C lcd(0x26, 16, 2);
+
+// Variable im RTC-Speicher, die den Schlaf überlebt
+RTC_DATA_ATTR int bootCount = 0; 
 
 char symbols[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '#', '+', '*', '<', '>', ',', ';', '.', ':', '-', '_', '!', '$', '%', '&', '/', '(', ')', '=', '?', ' '};
 
 bool Clock = false;
 bool wifiView = false;
 
-char *menuStrings[] = {"Clock", "Dino Game", "Scan for Wifis", "Connect WLAN", "Configure WLAN"}; // Wenn reinfolge geändert menu Index in loop() änder!!!!!!!
+char *menuStrings[] = {"Clock", "Dino Game", "Scan for Wifis", "Connect WLAN", "Configure WLAN", "", "", "", "", "", "", "", "", "", "", "Deep Sleep"}; // Wenn reinfolge geändert menu Index in loop() änder!!!!!!!
 int menuIndex = 0;
 
-char ssid[33] = ""; //Standard WLAN
-char password[64] = ""; //Standard Passwort
+char ssid[33] = "";
+char password[64] = "";
 WiFiUDP ntpUDP;
 
 char Time[ ] = "TIME:00:00:00";
@@ -32,56 +36,16 @@ bool get_button() {
   return digitalRead(12);
 }
 
-byte dino_l[8] = {
-  B00000111,
-  B00000101,
-  B00000111,
-  B00010110,
-  B00011111,
-  B00011110,
-  B00001110,
-  B00000100
-};
+// Custom Characters für den LCD-Dino (als korrekte Byte-Arrays)
+byte dino_l[8] = { B00000111, B00000101, B00000111, B00010110, B00011111, B00011110, B00001110, B00000100 };
+byte dino_r[8] = { B00000111, B00000101, B00000111, B00010110, B00011111, B00011110, B00001110, B00000010 };
+byte cactus_small[8] = { 0b00100, 0b00101, 0b10101, 0b10101, 0b10111, 0b11100, 0b00100, 0b00000 };
+byte cactus_big[8] = { B00000000, B00000100, B00000101, B00010101, B00010110, B00001100, B00000100, B00000100 };
 
-// dino right leg char
-byte dino_r[8] = {
-  B00000111,
-  B00000101,
-  B00000111,
-  B00010110,
-  B00011111,
-  B00011110,
-  B00001110,
-  B00000010
-};
-
-// small cactus
-byte cactus_small[8] = {
-  0b00100,
-  0b00101,
-  0b10101,
-  0b10101,
-  0b10111,
-  0b11100,
-  0b00100,
-  0b00000
-};
-
-// big cactus
-byte cactus_big[8] = {
-  B00000000,
-  B00000100,
-  B00000101,
-  B00010101,
-  B00010110,
-  B00001100,
-  B00000100,
-  B00000100
-};
 
   // game world
   char world[] = {
-    32, 32, 32, 32, 32, 32, 32, 83, 99, 111, 114, 101, 58, 32, 32, 32,
+    32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
     32, 0, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
   };
 
@@ -135,16 +99,24 @@ void setup() {
 
   Wire.begin(21, 22);
 
+  Serial.begin(115200); 
+	lcd.init();                      
+  lcd.backlight();
+  lcd.setCursor(0, 0); 
+
   lcd.createChar(0, dino_l);
   lcd.createChar(1, dino_r);
   lcd.createChar(2, cactus_small);
   lcd.createChar(3, cactus_big);
 
-  Serial.begin(115200); 
-	lcd.init();                      
-  lcd.backlight();
-  lcd.setCursor(0, 0); 
-   
+  if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0) {
+    Serial.println("Meldung: ESP32 wurde erfolgreich über PIN 13 geweckt!");
+  } else {
+    Serial.println("Meldung: Normaler Start oder Reset.");
+  }
+
+  esp_sleep_enable_ext0_wakeup(BUTTON_PIN, 1);
+
   menu();
 }
 
@@ -515,8 +487,13 @@ void configureWLAN() {
 }
 
 void loop() {
-  while(digitalRead(13) == 0) {
+  while(digitalRead(14) == 0) {
     menuIndex++;
+    menu();
+    delay(250);
+  }
+  while(digitalRead(27) == 0) {
+    menuIndex--;
     menu();
     delay(250);
   }
@@ -535,6 +512,15 @@ void loop() {
           } else {
             if(menuIndex == 4) {
               configureWLAN();
+            } else {
+              if(menuIndex == 15) {
+                lcd.clear();
+                lcd.setCursor(3, 0);
+                lcd.print("DEEP SLEEP");
+                lcd.noBacklight();
+                esp_sleep_enable_ext0_wakeup(BUTTON_PIN, 0);
+                esp_deep_sleep_start();
+              }
             }
           }
         }

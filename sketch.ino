@@ -7,7 +7,7 @@
 
 LiquidCrystal_I2C lcd(0x26, 16, 2);
 
-// Variable im RTC-Speicher, die den Schlaf überlebt
+// Variable that not get lost when Deep Sleep
 RTC_DATA_ATTR int bootCount = 0; 
 
 char symbols[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '#', '+', '*', '<', '>', ',', ';', '.', ':', '-', '_', '!', '$', '%', '&', '/', '(', ')', '=', '?', ' '};
@@ -36,7 +36,7 @@ bool get_button() {
   return digitalRead(12);
 }
 
-// Custom Characters für den LCD-Dino (als korrekte Byte-Arrays)
+// Custem Char LCD Dino
 byte dino_l[8] = { B00000111, B00000101, B00000111, B00010110, B00011111, B00011110, B00001110, B00000100 };
 byte dino_r[8] = { B00000111, B00000101, B00000111, B00010110, B00011111, B00011110, B00001110, B00000010 };
 byte cactus_small[8] = { 0b00100, 0b00101, 0b10101, 0b10101, 0b10111, 0b11100, 0b00100, 0b00000 };
@@ -92,10 +92,10 @@ uint8_t scroll_world() {
 void setup() {   
   pinMode(13, INPUT_PULLUP); // Menu
   pinMode(12, INPUT_PULLUP); // Ok
-  pinMode(14, INPUT_PULLUP); // Rechts
-  pinMode(27, INPUT_PULLUP); // Links
-  pinMode(26, INPUT_PULLUP); // Hoch
-  pinMode(25, INPUT_PULLUP); // Runter
+  pinMode(14, INPUT_PULLUP); // Right
+  pinMode(27, INPUT_PULLUP); // Left
+  pinMode(26, INPUT_PULLUP); // Up
+  pinMode(25, INPUT_PULLUP); // Down
 
   Wire.begin(21, 22);
 
